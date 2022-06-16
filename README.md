@@ -414,65 +414,12 @@ y = 0.37 * x + 1
 
 ---
 
+<br>
 
+####참고
 
+<br>
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+* https://gameqa.tistory.com/104 (온라인게임 이용자 감소와 ARPU 증가 추이 - 게임QA 시장 조사 피드백)
+* https://ssung-22.tistory.com/42 (모수를 왜 추정하고, 어떻게 추정하는거지?)
+* https://www.is.com/ko/community/blog/mobile-dictionary-part-4/ ([알아두면 쓸모있는 모바일 마케팅 용어사전] Part 4. 유저 및 유저 관련 지표 용어)
