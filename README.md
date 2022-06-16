@@ -79,10 +79,241 @@ y = x * a + 1
 ```
 
 그럼 이제 기준을 정했으니 최적화된 수학적모형을 만들어보도록 하자.  
-나는 수학적모형을 유전알고리즘을 통해 구해볼 생각이며, 그 기준은 에러값의 총 합이 가장 작은 것이다.
+나는 수학적모형을 유전알고리즘을 통해 구해볼 생각이며, 그 기준은 에러값의 총 합이 가장 작은 것이다.  
+이 유전알고리즘의 기준은 다음과 같다.  
+<ol>
+<li>기울기의 최대값은 0.75, 최소값은 0.1</li>
+<li>1세대에 5마리가 태어난다. 그 중 적합도가 가장 높은(에러값의 총 합이 가장 낮은) 둘을 이용하여 다음 세대를 만든다.</li>
+<li>돌연변이 확률은 각 개체마다 1%의 확률로 나타난다.</li>
+<li>되물림은 만 회 이루어지며, 이를 4회 반복한다. 이후 마지막 되물림은 십만 회 이루어진다.</li>
+<li>적합도가 가장 높은 수학적모형은 역사에 위인으로 남겨놓는다.</li>
+<li>이후 마지막세대가 생성되었다해도 적합도가 위인보다 낮다면 위인을 베스트로서 출력한다.</li>
+</ol>
+이와같은 기준은 3차이상의 수학적모형이 아닌 1차식을 사용하기에 가능한 기준이라 생각하였고, 이를 기준으로 더 명확한 최적화된 수학적모형을 만들 수 있다고 생각하였다.  
 
+<br>
 
+사용한 코드는 다음과 같다.(허접해보일 수 있다.)
 
+<br>
+
+```
+
+#define _CRT_SECURE_NO_WARNINGS
+#include <stdio.h>
+#include <time.h>
+#include <Windows.h>
+#define genetic_re_max 10000
+#define genetic_n_max 5
+#define slope_max 0.75
+#define slope_min 0.1
+#define point 5
+
+struct _genetic
+{
+	double a;
+	double suitability;
+};
+
+struct _genetic genetic[genetic_n_max];
+struct _genetic genetic_chack_temp[genetic_n_max];
+struct _genetic genetic_best_chack;
+double y_point[point] = { 1, 1.1, 1.74, 1.98, 2.73 };
+
+void insert_sort(_genetic* genetic, int size) //삽입정렬
+{
+	struct _genetic key;
+	int j;
+
+	for (int i = 1; i < size; i++)
+	{
+		key = genetic[i];
+
+		for (j = i - 1; j >= 0 && genetic[j].suitability > key.suitability; j--)
+		{
+			genetic[j + 1] = genetic[j];
+		}
+
+		genetic[j + 1] = key;
+	}
+}
+
+void genetic_select_first() //아담과 이브들
+{
+	srand((unsigned int)time(NULL));
+
+	for (int i = 0; i < genetic_n_max; i++)
+	{
+		genetic[i].a = (double)(rand() % 650000) / 100000 + 0.1;
+	}
+}
+
+void genetic_select_twise() //교미
+{
+	srand((unsigned int)time(NULL));
+
+	int random;
+	struct _genetic temp[genetic_n_max];
+
+	for (int i = 0; i < genetic_n_max; i++)
+	{
+		temp[i] = genetic[i];
+	}
+
+	for (int i = 0; i < genetic_n_max; i++)
+	{
+		random = rand() % 100 + 1;
+		if (i == 0)
+		{
+			if (random == 1)
+			{
+				temp[i].a = (double)(rand() % 650000) / 100000 + 0.1;
+			}
+			else
+			{
+				temp[i].a = (genetic[0].a + genetic[1].a) * 0.6;
+			}
+		}
+		else if (i == 1)
+		{
+			if (random == 1)
+			{
+				temp[i].a = (double)(rand() % 650000) / 100000 + 0.1;
+			}
+			else
+			{
+				temp[i].a = (genetic[0].a + genetic[1].a) * 0.55;
+			}
+		}
+		else if (i == 2)
+		{
+			if (random == 1)
+			{
+				temp[i].a = (double)(rand() % 650000) / 100000 + 0.1;
+			}
+			else
+			{
+				temp[i].a = (genetic[0].a + genetic[1].a) * 0.5;
+			}
+		}
+		else if (i == 3)
+		{
+			if (random == 1)
+			{
+				temp[i].a = (double)(rand() % 650000) / 100000 + 0.1;
+			}
+			else
+			{
+				temp[i].a = (genetic[0].a + genetic[1].a) * 0.45;
+			}
+		}
+		else if (i == 4)
+		{
+			if (random == 1)
+			{
+				temp[i].a = (double)(rand() % 650000) / 100000 + 0.1;
+			}
+			else
+			{
+				temp[i].a = (genetic[0].a + genetic[1].a) * 0.4;
+			}
+		}
+	}
+
+	for (int i = 0; i < genetic_n_max; i++)
+	{
+		genetic[i] = temp[i];
+	}
+}
+
+void genetic_check() //유전 적합도(에러값)체크 후 정렬
+{
+	double y;
+	double all_error[genetic_n_max] = { 0 };
+
+	for (int i = 0; i < genetic_n_max; i++)
+	{
+		for (int j = 0; j < point; j++)
+		{
+			y = genetic[i].a * j + 1;
+			if (y > y_point[j])
+			{
+				all_error[i] = all_error[i] + (y - y_point[j]);
+			}
+			else if (y < y_point[j])
+			{
+				all_error[i] = all_error[i] + (y_point[j] - y);
+			}
+		}
+	}
+
+	for (int i = 0; i < genetic_n_max; i++)
+	{
+		genetic[i].suitability = all_error[i];
+	}
+
+	insert_sort(genetic, genetic_n_max);
+}
+
+void genetic_argorithm() // 유전 알고리즘 메인
+{
+	genetic_select_first();
+
+	for (int i = 0; i < genetic_re_max; i++)
+	{
+		printf("[%d]번째\n\n", i);
+
+		if (i < genetic_re_max-1)
+		{
+			genetic_check();
+			for (int j = 0; j < genetic_n_max; j++)
+			{
+				printf("[%d] a = %lf   error = %lf\n\n", j, genetic[j].a, genetic[j].suitability);
+			}
+			if (i == 0)
+			{
+				for (int i = 0; i < genetic_n_max; i++)
+				{
+					genetic_chack_temp[i] = genetic[i];
+				}
+				genetic_best_chack = genetic[0];
+			}
+			else
+			{
+				if (genetic_chack_temp[0].suitability < genetic[0].suitability)
+				{
+					genetic_chack_temp[1] = genetic[0];
+					genetic[0] = genetic_chack_temp[0];
+					genetic[1] = genetic_chack_temp[1];
+				}
+			}
+
+			if (genetic_best_chack.suitability > genetic[0].suitability)
+			{
+				genetic_best_chack = genetic[0];
+			}
+			genetic_select_twise();
+		}
+		else
+		{
+			genetic_check();
+			for (int j = 0; j < genetic_n_max; j++)
+			{
+				printf("[%d] a = %lf   error = %lf\n\n", j, genetic[j].a, genetic[j].suitability);
+			}
+		}
+	}
+}
+
+int main()
+{
+	genetic_argorithm();
+	printf("final best\na = %lf, error = %lf", genetic_best_chack.a, genetic_best_chack.suitability);
+
+	return 0;
+}
+
+```
 
 
 
